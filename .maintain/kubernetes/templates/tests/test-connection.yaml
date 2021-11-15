@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "myriad-claimer.fullname" . }}-test-connection"
+  labels:
+    {{- include "myriad-claimer.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget']
+      args: ['{{ include "myriad-claimer.fullname" . }}:{{ .Values.service.port }}']
+  restartPolicy: Never
