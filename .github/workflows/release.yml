@@ -128,7 +128,7 @@ jobs:
             ./connect.sh
             helm repo add myriad https://charts.myriad.systems
             helm repo update
-            helm upgrade myriad-api myriad/myriad-api \
+            helm upgrade myriad-claimer myriad/myriad-claimer \
               --install \
               --set-string image.tag=${{ needs.compute-build-info.outputs.latest_tag }} \
               --set-string config.appHost=${{ steps.secrets.outputs.CLAIMER_APP_HOST }} \
@@ -144,10 +144,10 @@ jobs:
               --set-string ingress.hosts[0].host=claimer.myriad.systems \
               --set-string ingress.hosts[0].paths[0].path=/ \
               --set-string ingress.hosts[0].paths[0].pathType=ImplementationSpecific \
-              --set-string ingress.tls[0].secretName=myriad-api-tls \
+              --set-string ingress.tls[0].secretName=myriad-claimer-tls \
               --set-string ingress.tls[0].hosts[0]=claimer.myriad.systems \
               --set autoscaling.enabled=true
-            kubectl rollout status deployment/myriad-api
+            kubectl rollout status deployment/myriad-claimer
 
   deploy-release:
     if: '!github.event.release.prerelease'
@@ -196,7 +196,7 @@ jobs:
             ./connect.sh
             helm repo add myriad https://charts.myriad.systems
             helm repo update
-            helm upgrade myriad-api myriad/myriad-api \
+            helm upgrade myriad-claimer myriad/myriad-claimer \
               --install \
               --set-string image.tag=${{ needs.compute-build-info.outputs.latest_tag }} \
               --set-string config.appHost=${{ steps.secrets.outputs.CLAIMER_APP_HOST }} \
@@ -212,7 +212,7 @@ jobs:
               --set-string ingress.hosts[0].host=claimer.myriad.systems \
               --set-string ingress.hosts[0].paths[0].path=/ \
               --set-string ingress.hosts[0].paths[0].pathType=ImplementationSpecific \
-              --set-string ingress.tls[0].secretName=myriad-api-tls \
+              --set-string ingress.tls[0].secretName=myriad-claimer-tls \
               --set-string ingress.tls[0].hosts[0]=claimer.myriad.systems \
               --set autoscaling.enabled=true
-            kubectl rollout status deployment/myriad-api
+            kubectl rollout status deployment/myriad-claimer
