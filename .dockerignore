@@ -11,3 +11,5 @@ twint
 Dockerfile
 node_modules
 .env
+.maintain
+,github
