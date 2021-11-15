@@ -1,0 +1,30 @@
+version: '3'
+
+services:
+  gundb:
+    image: gundb/gun:latest
+    ports:
+      - "8765:8765"
+    restart: always
+  web:
+    container_name: myriad-claimer
+    image: myriadsocial/myriad-claimer
+    build:
+      context: ../../
+      dockerfile: .maintain/docker/Dockerfile
+    env_file:
+      - ../../.env
+    environment:
+      - HOST=0.0.0.0
+      - PORT=3000
+    ports:
+      - 3006:3000
+    networks:
+      myriad:
+        ipv4_address: 172.27.1.6
+        aliases:
+          - myriad-claimer
+
+networks:
+  myriad:
+    external: true
