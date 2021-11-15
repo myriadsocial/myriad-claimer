@@ -1,0 +1,114 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "myriad-claimer.fullname" . }}
+  labels:
+    {{- include "myriad-claimer.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "myriad-claimer.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "myriad-claimer.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "myriad-claimer.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            {{- if .Values.config.appHost }}
+            - name: APP_HOST
+              value: {{ .Values.config.appHost }}
+            {{- end }}
+            {{- if .Values.config.port }}
+            - name: PORT
+              value: "{{ .Values.config.port }}"
+            {{- end }}
+            {{- if .Values.config.gun.user }}
+            - name: GUN_USER
+              value: {{ .Values.config.gun.user }}
+            {{- end }}
+            {{- if .Values.config.gun.pwd }}
+            - name: GUN_PWD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "myriad-claimer.gunPwdSecretName" . }}
+                  key: gunPwd
+            {{- end }}
+            {{- if .Values.config.gun.host }}
+            - name: GUN_HOST
+              value: {{ .Values.config.gun.host }}
+            {{- end }}
+            {{- if .Values.config.gun.port }}
+            - name: GUN_PORT
+              value: "{{ .Values.config.gun.port }}"
+            {{- end }}
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+          {{- if .Values.config.startupProbe.path }}
+          startupProbe:
+            httpGet:
+              path: {{ .Values.config.startupProbe.path }}
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 30
+            successThreshold: 1
+          {{- end }}
+          {{- if .Values.config.livenessProbe.path }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.config.livenessProbe.path }}
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+            successThreshold: 1
+          {{- end }}
+          {{- if .Values.config.livenessProbe.path }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.config.livenessProbe.path }}
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+            successThreshold: 1
+          {{- end }}
