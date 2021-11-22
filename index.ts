@@ -5,12 +5,10 @@ import { findPubKeyRedditProfile } from "./src/reddit/claimReddit";
 import { GetFbPosts } from "./src/facebook/facebookClaimer";
 import { GunUser } from "./src/types";
 import * as dotenv from "dotenv";
-// require("gun/axe");
 require("gun/sea");
 
 const TerminalRenderer = require("marked-terminal");
 const Gun = require("gun");
-// const SEA = Gun.SEA;
 
 dotenv.config();
 const port = process.env.PORT; 
@@ -28,9 +26,11 @@ gunLogin()
 initHTTPserver()
 async function gunLogin() {
   gun = Gun({ 
-    web: app.listen(parseInt(port), app_host, () => { console.log(marked("**Myriad Claimer's HTTP server running at "+app_host+" on port "+port+"**")) }),
     peers: [process.env.GUN_HOST],
     axe: false,
+    multicast: {
+      port: process.env.GUN_PORT
+    },
   });
   attachPeerConnectionListeners(gun);
   gunUser = gun.user();
@@ -41,18 +41,18 @@ async function gunLogin() {
     //login if create failed
     gun.user().auth(process.env.GUN_USER, process.env.GUN_PWD, async (cb: any) => {
       gunUser = gun.user()
+      console.log("GUN login cb", cb);
       if (!gunUser.is) {
         console.log("GUN LOGIN FAILED")
-        gun.user().create(process.env.GUN_USER, process.env.GUN_PWD, (cb: any) => {
-          console.log("create user cb", cb);
-          if (cb.ok === 0) {
-            return cb.pub
-          }
-        })
+        // gun.user().create(process.env.GUN_USER, process.env.GUN_PWD, (cb: any) => {
+        //   console.log("create user cb", cb);
+        //   if (cb.ok === 0) {
+        //     return cb.pub
+        //   }
+        // })
       }
       console.log("current user:", gunUser.is)
       initHTTPserver()
-      // console.log("saved twitter usernames", await gunUser.get("twitter_claims").get("rei__gun").once())
     })
 
   }
@@ -70,7 +70,6 @@ function attachPeerConnectionListeners(gun) {
 }
 
 function initHTTPserver() {
-  app.use(Gun.serve)
   app.use(express.json())
   
   app.get('/', (_,res) => {
